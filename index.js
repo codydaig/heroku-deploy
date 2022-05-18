@@ -73,38 +73,42 @@ const deploy = ({
   appdir,
 }) => {
   const force = !dontuseforce ? "--force" : "";
-  if (usedocker) {
-    execSync(
-      `heroku container:push ${dockerHerokuProcessType} --app ${app_name} ${dockerBuildArgs}`,
-      appdir ? { cwd: appdir } : null
-    );
-    execSync(
-      `heroku container:release ${dockerHerokuProcessType} --app ${app_name}`,
-      appdir ? { cwd: appdir } : null
-    );
-  } else {
-    let remote_branch = execSync(
-      "git remote show heroku | grep 'HEAD' | cut -d':' -f2 | sed -e 's/^ *//g' -e 's/ *$//g'"
-    )
-      .toString()
-      .trim();
+  // if (usedocker) {
+  //   execSync(
+  //     `heroku container:push ${dockerHerokuProcessType} --app ${app_name} ${dockerBuildArgs}`,
+  //     appdir ? { cwd: appdir } : null
+  //   );
+  //   execSync(
+  //     `heroku container:release ${dockerHerokuProcessType} --app ${app_name}`,
+  //     appdir ? { cwd: appdir } : null
+  //   );
+  // } else {
+    // let remote_branch = execSync(
+    //   "git remote show heroku | grep 'HEAD' | cut -d':' -f2 | sed -e 's/^ *//g' -e 's/ *$//g'"
+    // )
+    //   .toString()
+    //   .trim();
+    let remote_branch = "master"
 
-    if (remote_branch === "master") {
-      execSync("heroku plugins:install heroku-repo");
-      execSync("heroku repo:reset -a " + app_name);
-    }
+    // if (remote_branch === "master") {
+    //   execSync("heroku plugins:install heroku-repo");
+    //   execSync("heroku repo:reset -a " + app_name);
+    // }
 
     if (appdir === "") {
-      execSync(`git push heroku ${branch}:refs/heads/main ${force}`, {
+      // execSync(`git push heroku ${branch}:refs/heads/main ${force}`, {
+      //   maxBuffer: 104857600,
+      // });
+      execSync(`git push heroku ${branch}:master --force`, {
         maxBuffer: 104857600,
       });
     } else {
       execSync(
-        `git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:refs/heads/main`,
+        `git push ${force} heroku \`git subtree split --prefix=${appdir} ${branch}\`:master`,
         { maxBuffer: 104857600 }
       );
     }
-  }
+  // }
 };
 
 const healthcheckFailed = ({
@@ -178,39 +182,39 @@ if (heroku.dockerBuildArgs) {
   // Program logic
   try {
     // Just Login
-    if (heroku.justlogin) {
-      execSync(createCatFile(heroku));
-      console.log("Created and wrote to ~/.netrc");
+    // if (heroku.justlogin) {
+    //   execSync(createCatFile(heroku));
+    //   console.log("Created and wrote to ~/.netrc");
 
-      return;
-    }
+    //   return;
+    // }
 
-    execSync(`git config user.name "Heroku-Deploy"`);
-    execSync(`git config user.email "${heroku.email}"`);
-    const status = execSync("git status --porcelain").toString().trim();
-    if (status) {
-      execSync(
-        'git add -A && git commit -m "Commited changes from previous actions"'
-      );
-    }
+    // execSync(`git config user.name "Heroku-Deploy"`);
+    // execSync(`git config user.email "${heroku.email}"`);
+    // const status = execSync("git status --porcelain").toString().trim();
+    // if (status) {
+    //   execSync(
+    //     'git add -A && git commit -m "Commited changes from previous actions"'
+    //   );
+    // }
 
     // Check if using Docker
-    if (!heroku.usedocker) {
-      // Check if Repo clone is shallow
-      const isShallow = execSync(
-        "git rev-parse --is-shallow-repository"
-      ).toString();
+    // if (!heroku.usedocker) {
+    //   // Check if Repo clone is shallow
+    //   const isShallow = execSync(
+    //     "git rev-parse --is-shallow-repository"
+    //   ).toString();
 
-      // If the Repo clone is shallow, make it unshallow
-      if (isShallow === "true\n") {
-        execSync("git fetch --prune --unshallow");
-      }
-    }
+    //   // If the Repo clone is shallow, make it unshallow
+    //   if (isShallow === "true\n") {
+    //     execSync("git fetch --prune --unshallow");
+    //   }
+    // }
 
     execSync(createCatFile(heroku));
     console.log("Created and wrote to ~/.netrc");
 
-    createProcfile(heroku);
+    // createProcfile(heroku);
 
     if (heroku.usedocker) {
       execSync("heroku container:login");
@@ -218,10 +222,11 @@ if (heroku.dockerBuildArgs) {
     console.log("Successfully logged into heroku");
 
     addRemote(heroku);
-    addConfig(heroku);
+    // addConfig(heroku);
 
     try {
-      deploy({ ...heroku, dontuseforce: true });
+      // deploy({ ...heroku, dontuseforce: true });
+      deploy(heroku);
     } catch (err) {
       console.error(`
             Unable to push branch because the branch is behind the deployed branch. Using --force to deploy branch. 
@@ -229,7 +234,7 @@ if (heroku.dockerBuildArgs) {
             Specifically, the error was: ${err}
         `);
 
-      deploy(heroku);
+      // deploy(heroku);
     }
 
     if (heroku.healthcheck) {
