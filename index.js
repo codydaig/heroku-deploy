@@ -23,7 +23,7 @@ let heroku = {
 try {
   execSync(createCatFile({ email: heroku.email, api_key: heroku.api_key }));
   execSync("heroku git:remote --app " + heroku.app_name);
-  execSync(`git push heroku master --force`);
+  execSync(`git push heroku ENG-347-autodeploy-to-staging:master --force`);
   core.setOutput("status", "Successfully deployed staging");
 } catch (err) {
   core.setFailed(err.toString());
